@@ -62,4 +62,6 @@ tests/tst-groups2
 tests/tst-groups3
 tests/tst-groups4
 tests/tst-parseconfig1
+tests/tst-getconfdirs7
+tests/tst-quote1
 util/econftool
