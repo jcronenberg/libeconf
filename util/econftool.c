@@ -496,7 +496,7 @@ static void newProcess(const char *command, char *path, const char *filenameSuff
     pid_t pid = fork();
 
     if (pid == -1) {
-        fprintf(stderr, "Error with fork()\n");
+        fprintf(stderr, "fork() failed with: %s\n", strerror(errno));
         exit(EXIT_FAILURE);
     } else if (pid == 0) {
     /* child */
