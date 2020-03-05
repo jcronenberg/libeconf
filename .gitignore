@@ -65,3 +65,4 @@ tests/tst-parseconfig1
 tests/tst-getconfdirs7
 tests/tst-quote1
 util/econftool
+util/test.sh

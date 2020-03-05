@@ -43,9 +43,11 @@ static econf_file *key_file = NULL;
 static econf_file *key_file_edit = NULL;
 
 static void deleteTmpFiles(void);
-static void diffGroups(char **, char **, char ***, char ***, char ***, size_t *, size_t *, size_t *, size_t *, size_t *);
+static void diffGroups(char **, char **, char ***, char ***, char ***, size_t *,
+        size_t *, size_t *, size_t *, size_t *);
 static void newProcess(const char *, char *, const char *, econf_file *);
 static void usage(void);
+static void changeRoot(char *);
 
 int main (int argc, char *argv[])
 {
@@ -83,6 +85,7 @@ int main (int argc, char *argv[])
         case 'f':
             /* overwrite path */
             snprintf(path, strlen("/etc") + 1, "%s", "/etc");
+            changeRoot(path);
             isDropinFile = false;
             break;
         case 'h':
@@ -153,9 +156,11 @@ int main (int argc, char *argv[])
     if (isDropinFile) {
         snprintf(path, strlen("/etc/") + strlen(filenameSuffix) + 5, "%s%s%s",
                 "/etc/", filenameSuffix, ".d");
+        changeRoot(path);
     }
     snprintf(pathFilename, strlen(path) + strlen(filenameSuffix) + 4, "%s%s%s",
             path, "/", filenameSuffix);
+    //changeRoot(pathFilename);
     snprintf(home, strlen(getenv("HOME")) + 1, "%s", getenv("HOME"));
 
     const char *editor = getenv("EDITOR");
@@ -190,7 +195,8 @@ int main (int argc, char *argv[])
     if (strcmp(argv[optind], "show") == 0) {
         fprintf(stdout, "command: econftool show\n\n"); /* debug */
 
-        if ((error = econf_readDirs(&key_file, "/usr/etc", "/etc", filename, suffix,"=", "#"))) {
+        //change here if broken
+        if ((error = econf_readDirs(&key_file, "/usr/etc", path, filename, suffix,"=", "#"))) {
             fprintf(stderr, "%s\n", econf_errString(error));
             econf_free(key_file);
             return EXIT_FAILURE;
@@ -299,6 +305,7 @@ int main (int argc, char *argv[])
             if (!isRoot) {
                 /* adjust path to home directory of the user.*/
                 snprintf(path, strlen(xdgConfigDir) + 1, "%s", xdgConfigDir);
+                changeRoot(path);
                 fprintf(stdout, "|Not root\n"); /* debug */
                 fprintf(stdout, "|Overwriting path with XDG_CONF_DIR\n\n"); /* debug */
             } else {
@@ -686,4 +693,15 @@ static void newProcess(const char *command, char *path, const char *filenameSuff
         free(groups_deleted);
         free(groups_common);
     }
+}
+void changeRoot(char *path)
+{
+    char *tmp = strdup(path);
+
+    if (getenv("ECONFTOOL_ROOT") != NULL) {
+        strcpy(path, getenv("ECONFTOOL_ROOT"));
+        strcat(path, tmp);
+    }
+
+    free(tmp);
 }
