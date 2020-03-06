@@ -11,9 +11,12 @@ EXTRA_DIST = tst-arguments-data tst-logindefs1-data tst-logindefs2-data \
 	tst-getconfdirs4-data tst-getconfdirs5-data tst-getconfdirs6-data \
 	tst-getconfdirs7-data \
 	tst-arguments5-data tst-groups3-data tst-parseconfig-data \
-	tst-quote1-data
+	tst-quote1-data \
+	tst-econftool-data
 
-TESTS = tst-filedoesnotexit1 tst-merge1 tst-merge2 tst-merge3 tst-merge4 \
+check_SCRIPTS = tst-econftool_show1.sh tst-econftool1.sh
+
+check_PROGRAMS = tst-filedoesnotexit1 tst-merge1 tst-merge2 tst-merge3 tst-merge4 \
 	tst-merge5 \
 	tst-logindefs1 tst-logindefs2 \
 	tst-arguments1 tst-arguments2 tst-arguments3 tst-arguments4 \
@@ -25,11 +28,11 @@ TESTS = tst-filedoesnotexit1 tst-merge1 tst-merge2 tst-merge3 tst-merge4 \
 	tst-setgetvalues1 \
 	tst-groups1 tst-groups2 tst-groups3 tst-groups4 \
 	tst-parseconfig1 \
-	tst-quote1
+	tst-quote1 
 
 XFAIL_TESTS =
 
-check_PROGRAMS = ${TESTS}
+TESTS = ${check_PROGRAMS} $(check_SCRIPTS)
 
 tst_getconfdirs1_CFLAGS = $(AM_CFLAGS) -DSUFFIX=\".conf\"
 tst_getconfdirs2_CFLAGS = $(AM_CFLAGS) -DSUFFIX=\"conf\"
