@@ -60,6 +60,8 @@ int main (int argc, char *argv[])
     char filename[4096]; /* the filename without the suffix */
     char filenameSuffix[4096]; /* the filename with the suffix */
     char pathFilename[4096]; /* the path concatenated with the filename and the suffix */
+    char rootDir[4096] = "/etc";
+    char usrRootDir[4096] = "/usr/etc";
     uid_t uid = getuid();
     uid_t euid = geteuid();
     char username[256];
@@ -161,13 +163,18 @@ int main (int argc, char *argv[])
     snprintf(pathFilename, strlen(path) + strlen(filenameSuffix) + 4, "%s%s%s",
             path, "/", filenameSuffix);
     //changeRoot(pathFilename);
-    snprintf(home, strlen(getenv("HOME")) + 1, "%s", getenv("HOME"));
 
     const char *editor = getenv("EDITOR");
     if (editor == NULL) {
         /* if no editor is specified take vim as default */
         editor = "/usr/bin/vim";
     }
+
+    if (getenv("ECONFTOOL_ROOT") == NULL)
+        snprintf(home, strlen(getenv("HOME")) + 1, "%s", getenv("HOME"));
+    else
+        changeRoot(home);
+
     char *xdgConfigDir = getenv("XDG_CONFIG_HOME");
     if (xdgConfigDir == NULL) {
         /* if no XDG_CONFIG_HOME ist specified take ~/.config as
@@ -177,15 +184,23 @@ int main (int argc, char *argv[])
         xdgConfigDir = home;
     }
 
-    fprintf(stdout, "|--Initial values-- \n"); /* debug */
-    fprintf(stdout, "|filename: %s\n", filename); /* debug */
-    fprintf(stdout, "|suffix: %s\n", suffix); /* debug */
-    fprintf(stdout, "|filenameSuffix: %s\n", filenameSuffix); /* debug */
-    fprintf(stdout, "|XDG conf dir: %s\n", xdgConfigDir); /* debug */
-    fprintf(stdout, "|home: %s\n", home); /* debug */
-    fprintf(stdout, "|path: %s\n", path); /* debug */
-    fprintf(stdout, "|pathFilename: %s\n\n", pathFilename); /* debug */
+    /* Change Root dirs */
+    changeRoot(rootDir);
+    changeRoot(usrRootDir);
 
+    /* debug 
+    fprintf(stdout, "|--Initial values-- \n"); 
+    fprintf(stdout, "|filename: %s\n", filename); 
+    fprintf(stdout, "|suffix: %s\n", suffix); 
+    fprintf(stdout, "|filenameSuffix: %s\n", filenameSuffix); 
+    fprintf(stdout, "|XDG conf dir: %s\n", xdgConfigDir); 
+    fprintf(stdout, "|home: %s\n", home); 
+    fprintf(stdout, "|path: %s\n", path); 
+    fprintf(stdout, "|pathFilename: %s\n", pathFilename); 
+    fprintf(stdout, "|rootDir: %s\n", rootDir); 
+    fprintf(stdout, "|usrRootDir: %s\n\n", usrRootDir); 
+     debug end */
+    
 
     /****************************************************************
      * @brief This command will read all snippets for filename.conf
@@ -196,7 +211,7 @@ int main (int argc, char *argv[])
         fprintf(stdout, "command: econftool show\n\n"); /* debug */
 
         //change here if broken
-        if ((error = econf_readDirs(&key_file, "/usr/etc", path, filename, suffix,"=", "#"))) {
+        if ((error = econf_readDirs(&key_file, usrRootDir, rootDir, filename, suffix,"=", "#"))) {
             fprintf(stderr, "%s\n", econf_errString(error));
             econf_free(key_file);
             return EXIT_FAILURE;
@@ -252,6 +267,7 @@ int main (int argc, char *argv[])
      *        - Enhance the libeconf API first, then implement
      */
     } else if (strcmp(argv[optind], "cat") == 0) {
+        fprintf(stderr, "Not implemented yet!\n");
 
     /****************************************************************
      * @brief This command will start an editor (EDITOR environment variable),
@@ -283,7 +299,7 @@ int main (int argc, char *argv[])
                 exit(EXIT_FAILURE);
         } else {
             fprintf(stdout, "|Reading key_file\n"); /* debug */
-            error = econf_readDirs(&key_file, "/usr/etc", "/etc", filename, suffix,"=", "#");
+            error = econf_readDirs(&key_file, usrRootDir, rootDir, filename, suffix,"=", "#");
 
             if (error == 3) {
             /* the file does not exist */
