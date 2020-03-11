@@ -210,7 +210,6 @@ int main (int argc, char *argv[])
     if (strcmp(argv[optind], "show") == 0) {
         fprintf(stdout, "command: econftool show\n\n"); /* debug */
 
-        //change here if broken
         if ((error = econf_readDirs(&key_file, usrRootDir, rootDir, filename, suffix,"=", "#"))) {
             fprintf(stderr, "%s\n", econf_errString(error));
             econf_free(key_file);
@@ -710,6 +709,7 @@ static void newProcess(const char *command, char *path, const char *filenameSuff
         free(groups_common);
     }
 }
+//Change root dir if enviroment variable "ECONFTOOL_ROOT" exists, mostly for testing purposes
 void changeRoot(char *path)
 {
     char *tmp = strdup(path);
