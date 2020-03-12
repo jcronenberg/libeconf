@@ -166,8 +166,8 @@ int main (int argc, char *argv[])
 
     const char *editor = getenv("EDITOR");
     if (editor == NULL) {
-        /* if no editor is specified take vim as default */
-        editor = "/usr/bin/vim";
+        /* if no editor is specified take vi as default */
+        editor = "/usr/bin/vi";
     }
 
     if (getenv("ECONFTOOL_ROOT") == NULL)
@@ -188,7 +188,7 @@ int main (int argc, char *argv[])
     changeRoot(rootDir);
     changeRoot(usrRootDir);
 
-    /* debug 
+    /* debug */
     fprintf(stdout, "|--Initial values-- \n"); 
     fprintf(stdout, "|filename: %s\n", filename); 
     fprintf(stdout, "|suffix: %s\n", suffix); 
@@ -199,7 +199,7 @@ int main (int argc, char *argv[])
     fprintf(stdout, "|pathFilename: %s\n", pathFilename); 
     fprintf(stdout, "|rootDir: %s\n", rootDir); 
     fprintf(stdout, "|usrRootDir: %s\n\n", usrRootDir); 
-     debug end */
+    /* debug end */
     
 
     /****************************************************************
@@ -208,8 +208,6 @@ int main (int argc, char *argv[])
      *        values as an application would see them.
      */
     if (strcmp(argv[optind], "show") == 0) {
-        fprintf(stdout, "command: econftool show\n\n"); /* debug */
-
         if ((error = econf_readDirs(&key_file, usrRootDir, rootDir, filename, suffix,"=", "#"))) {
             fprintf(stderr, "%s\n", econf_errString(error));
             econf_free(key_file);
@@ -346,7 +344,7 @@ int main (int argc, char *argv[])
         fprintf(stdout, "|path: %s\n", path); /* debug */
         fprintf(stdout, "|pathFilename: %s\n\n", pathFilename); /* debug */
 
-        char input[2] = "";
+        char input[3] = "";
 
         /* let the user verify 2 times that the file should really be deleted */
         do {

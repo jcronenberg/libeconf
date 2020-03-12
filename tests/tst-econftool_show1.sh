@@ -5,15 +5,16 @@ declare -a teststrings=("example.conf"
                       "example.conf -f"
                       "nonexistant.conf"
                       "randomstring")
-declare -a experr=("command: econftool show"
-                   "command: econftool show"
+declare -a experr=("variable = 301"
+                   "variable = 301"
                    "Configuration file not found"
                    "-->Currently only works with a dot in the filename!")
 
 
 teststringslength=${#teststrings[@]}
 
-export ECONFTOOL_ROOT=$PWD/tests/tst-econftool-data
+export ECONFTOOL_ROOT=$PWD/tst-econftool-data
+echo econftool_root: $ECONFTOOL_ROOT
 
 got_error=false
 

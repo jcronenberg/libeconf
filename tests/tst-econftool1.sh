@@ -15,8 +15,6 @@ declare -a experr=("Usage: econftool"
 
 teststringslength=${#teststrings[@]}
 
-export ECONFTOOL_ROOT=$PWD/tests/tst-econftool-data
-
 got_error=false
 
 for ((i=0; i<${teststringslength}; i++)); do
