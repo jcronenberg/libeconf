@@ -1,8 +1,8 @@
 #!/bin/bash
 
 
-declare -a teststrings=("autofs.conf"
-                      "autofs.conf -f"
+declare -a teststrings=("example.conf"
+                      "example.conf -f"
                       "nonexistant.conf"
                       "randomstring")
 declare -a experr=("command: econftool show"
