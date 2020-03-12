@@ -709,6 +709,7 @@ static void newProcess(const char *command, char *path, const char *filenameSuff
         free(groups_common);
     }
 }
+
 //Change root dir if enviroment variable "ECONFTOOL_ROOT" exists, mostly for testing purposes
 void changeRoot(char *path)
 {
