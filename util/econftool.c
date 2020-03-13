@@ -143,20 +143,18 @@ int main (int argc, char *argv[])
      * argc == 4 -> edit --full
      */
     if (argc == 4) {
-        snprintf(filename, strlen(argv[3]) -  strlen(posLastDot) + 1, "%s", argv[3]);
-        snprintf(filenameSuffix, strlen(argv[3]) + 1, "%s", argv[3]);
+        snprintf(filename, strlen(argv[3]) - strlen(posLastDot) + 1, "%s", argv[3]);
+        snprintf(filenameSuffix, sizeof(filenameSuffix), argv[3]);
     } else {
-        snprintf(filename, strlen(argv[2]) -  strlen(posLastDot) + 1, "%s", argv[2]);
-        snprintf(filenameSuffix, strlen(argv[2]) + 1, "%s", argv[2]);
+        snprintf(filename, strlen(argv[2]) - strlen(posLastDot) + 1, "%s", argv[2]);
+        snprintf(filenameSuffix, sizeof(filenameSuffix), argv[2]);
     }
 
     if (isDropinFile) {
-        snprintf(path, strlen("/etc/") + strlen(filenameSuffix) + 5, "%s%s%s",
-                "/etc/", filenameSuffix, ".d");
+        snprintf(path, sizeof(path), "%s%s%s", "/etc/", filenameSuffix, ".d");
         changeRoot(path);
     }
-    snprintf(pathFilename, strlen(path) + strlen(filenameSuffix) + 4, "%s%s%s",
-            path, "/", filenameSuffix);
+    snprintf(pathFilename, sizeof(pathFilename), "%s%s%s", path, "/", filenameSuffix);
     //changeRoot(pathFilename);
 
     const char *editor = getenv("EDITOR");
@@ -166,7 +164,7 @@ int main (int argc, char *argv[])
     }
 
     if (getenv("ECONFTOOL_ROOT") == NULL)
-        snprintf(home, strlen(getenv("HOME")) + 1, "%s", getenv("HOME"));
+        snprintf(home, sizeof(home), "%s", getenv("HOME"));
     else
         changeRoot(home);
 
@@ -313,14 +311,14 @@ int main (int argc, char *argv[])
             }
             if (!isRoot) {
                 /* adjust path to home directory of the user.*/
-                snprintf(path, strlen(xdgConfigDir) + 1, "%s", xdgConfigDir);
+                snprintf(path, sizeof(path), "%s", xdgConfigDir);
                 changeRoot(path);
                 fprintf(stdout, "|Not root\n"); /* debug */
                 fprintf(stdout, "|Overwriting path with XDG_CONF_DIR\n\n"); /* debug */
             } else {
                 if(isDropinFile) {
                     memset(filename, 0, 4096);
-                    snprintf(filenameSuffix, strlen(DROPINFILENAME) + 1, "%s", DROPINFILENAME);
+                    snprintf(filenameSuffix, sizeof(filenameSuffix), "%s", DROPINFILENAME);
                 }
             }
             /* Open $EDITOR in new process 
@@ -357,8 +355,7 @@ int main (int argc, char *argv[])
             } while (strcmp(input, "y") != 0 && strcmp(input, "n") != 0);
 
             if(strcmp(input, "y") == 0) {
-                snprintf(pathFilename, strlen(filename) + strlen(suffix) + 8,
-                        "%s%s%s", "/etc/", filename, suffix);
+                snprintf(pathFilename, sizeof(pathFilename), "%s%s%s", "/etc/", filename, suffix);
 
                 int status = remove(pathFilename);
                 if (status != 0)
