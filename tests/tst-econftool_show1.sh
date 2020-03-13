@@ -13,13 +13,18 @@ declare -a experr=("variable = 301"
 
 teststringslength=${#teststrings[@]}
 
-export ECONFTOOL_ROOT=$PWD/tst-econftool-data
-echo econftool_root: $ECONFTOOL_ROOT
+libeconfdir=$PWD
+if [[ $PWD =~ "_build" ]]; then
+	cd ../../..
+	export ECONFTOOL_ROOT=$PWD/tests/tst-econftool-data
+else
+	export ECONFTOOL_ROOT=$PWD/tst-econftool-data
+fi
 
 got_error=false
 
 for ((i=0; i<${teststringslength}; i++)); do
-    error=$($PWD/../util/econftool show ${teststrings[$i]} 2>&1)
+    error=$($libeconfdir/../util/econftool show ${teststrings[$i]} 2>&1)
     if [[ ! $error =~ ${experr[$i]} ]]; then
         echo error for ${teststrings[$i]}
         echo expected to contain: ${experr[$i]}
