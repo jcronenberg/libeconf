@@ -29,6 +29,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <limits.h>
 
 #include "libeconf.h"
 
@@ -55,17 +56,15 @@ int main (int argc, char *argv[])
     econf_err error;
     char *suffix = NULL; /* the suffix of the filename e.g. .conf */
     char *posLastDot;
-    char path[4096]; /* the path of the config file */
-    char home[4096]; /* the path of the home directory */
-    char filename[4096]; /* the filename without the suffix */
-    char filenameSuffix[4096]; /* the filename with the suffix */
-    char pathFilename[4096]; /* the path concatenated with the filename and the suffix */
-    char rootDir[4096] = "/etc";
-    char usrRootDir[4096] = "/usr/etc";
+    char path[PATH_MAX]; /* the path of the config file */
+    char home[PATH_MAX]; /* the path of the home directory */
+    char filename[PATH_MAX]; /* the filename without the suffix */
+    char filenameSuffix[PATH_MAX]; /* the filename with the suffix */
+    char pathFilename[PATH_MAX]; /* the path concatenated with the filename and the suffix */
+    char rootDir[PATH_MAX] = "/etc";
+    char usrRootDir[PATH_MAX] = "/usr/etc";
     uid_t uid = getuid();
     uid_t euid = geteuid();
-    char username[256];
-    struct passwd *pw = getpwuid(uid);
 
     memset(path, 0, 4096);
     memset(home, 0, 4096);
@@ -116,10 +115,6 @@ int main (int argc, char *argv[])
     }
 
     /**** initialization ****/
-
-    /* retrieve the username from the password file entry */
-    if (pw)
-        snprintf(username, strlen(pw->pw_name) + 1, "%s", pw->pw_name);
 
     /* basic write permission check */
     if (uid == 0 && uid == euid)
@@ -190,6 +185,7 @@ int main (int argc, char *argv[])
 
     /* debug */
     fprintf(stdout, "|--Initial values-- \n"); 
+    fprintf(stdout, "|PATH_MAX: %i\n", PATH_MAX); 
     fprintf(stdout, "|filename: %s\n", filename); 
     fprintf(stdout, "|suffix: %s\n", suffix); 
     fprintf(stdout, "|filenameSuffix: %s\n", filenameSuffix); 
