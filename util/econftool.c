@@ -66,10 +66,10 @@ int main (int argc, char *argv[])
     uid_t uid = getuid();
     uid_t euid = geteuid();
 
-    memset(path, 0, 4096);
-    memset(home, 0, 4096);
-    memset(filename, 0, 4096);
-    memset(pathFilename, 0, 4096);
+    memset(path, 0, PATH_MAX);
+    memset(home, 0, PATH_MAX);
+    memset(filename, 0, PATH_MAX);
+    memset(pathFilename, 0, PATH_MAX);
 
     /* parse command line arguments. See getopt_long(3) */
     int opt;
@@ -85,7 +85,7 @@ int main (int argc, char *argv[])
         switch(opt) {
         case 'f':
             /* overwrite path */
-            snprintf(path, strlen("/etc") + 1, "%s", "/etc");
+            snprintf(path, sizeof(path), "%s", "/etc");
             changeRoot(path);
             isDropinFile = false;
             break;
@@ -133,7 +133,7 @@ int main (int argc, char *argv[])
         posLastDot = strrchr(argv[3], 46); /* . (dot) in ASCII is 46 */
 
     if (posLastDot == NULL) {
-        fprintf(stderr, "-->Currently only works with a dot in the filename!\n");
+        fprintf(stderr, "Currently only works with a dot in the filename!\n");
         exit(EXIT_FAILURE);
     }
     suffix = posLastDot;
