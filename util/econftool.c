@@ -155,7 +155,6 @@ int main (int argc, char *argv[])
         changeRoot(path);
     }
     snprintf(pathFilename, sizeof(pathFilename), "%s%s%s", path, "/", filenameSuffix);
-    //changeRoot(pathFilename);
 
     const char *editor = getenv("EDITOR");
     if (editor == NULL) {
@@ -170,7 +169,7 @@ int main (int argc, char *argv[])
 
     char *xdgConfigDir = getenv("XDG_CONFIG_HOME");
     if (xdgConfigDir == NULL) {
-        /* if no XDG_CONFIG_HOME ist specified take ~/.config as
+        /* if no XDG_CONFIG_HOME is specified take ~/.config as
          * default
          */
         strncat(home, CONFDIR, sizeof(home) - strlen(home) - 1);
@@ -292,7 +291,7 @@ int main (int argc, char *argv[])
                 changeRoot(path);
             } else {
                 if(isDropinFile) {
-                    memset(filename, 0, 4096);
+                    memset(filename, 0, PATH_MAX);
                     snprintf(filenameSuffix, sizeof(filenameSuffix), "%s", DROPINFILENAME);
                 }
             }
@@ -466,8 +465,8 @@ static void diffGroups(char **group1, char **group2, char ***new, char ***delete
 static void newProcess(const char *command, char *path, const char *filenameSuffix,
                        econf_file *key_file)
 {
-    char pathFilename[4096];
-    memset(pathFilename, 0, 4096);
+    char pathFilename[PATH_MAX];
+    memset(pathFilename, 0, PATH_MAX);
     econf_err error;
     int wstatus = 0;
     pid_t pid = fork();
@@ -475,7 +474,7 @@ static void newProcess(const char *command, char *path, const char *filenameSuff
     if (pid == -1) {
         fprintf(stderr, "fork() failed with: %s\n", strerror(errno));
         exit(EXIT_FAILURE);
-    } else if (pid == 0) {
+    } else if (!pid) {
     /* child */
 
         /* write contents of key_file to 2 temporary files. In the future this
@@ -572,29 +571,8 @@ static void newProcess(const char *command, char *path, const char *filenameSuff
             econf_free(key_file_edit);
             exit(EXIT_FAILURE);
         }
-        /**** testing output ****/
-        diffGroups(groups, groups_edit, &groups_new, &groups_deleted,
-                &groups_common, &group_count, &group_edit_count,
-                &group_new_count, &group_deleted_count, &group_common_count);
 
-        fprintf(stdout, "Groups common: ");
-        for (size_t g = 0; g < group_common_count; g++) {
-        fprintf(stdout, "%s ", groups_common[g]);
-        }
-        fprintf(stdout, "\nGroups new: ");
-        for (size_t g = 0; g < group_new_count; g++) {
-            fprintf(stdout, "%s ", groups_new[g]);
-        }
-        fprintf(stdout, "\nGroups deleted: ");
-        for (size_t g = 0; g < group_deleted_count; g++) {
-            fprintf(stdout, "%s ", groups_deleted[g]);
-        }
-        fprintf(stdout, "\n\n");
-        /*********************************************************************/
-
-        /* if /etc/filename.conf.d does not exist, create it, otherwise
-         * econf_writeFile() will fail
-         */
+        /* if /etc/filename.conf.d does not exist, create it */
         if (access(path, F_OK) == -1 && errno == ENOENT) {
             int mkDir = mkdir(path,
                     S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH); // 755
@@ -649,7 +627,9 @@ static void newProcess(const char *command, char *path, const char *filenameSuff
     }
 }
 
-//Change root dir if enviroment variable "ECONFTOOL_ROOT" exists, mostly for testing purposes
+/* Change root dir if enviroment variable "ECONFTOOL_ROOT" exists
+ * mostly for testing purposes
+ */
 void changeRoot(char *path)
 {
     char *tmp = strdup(path);
