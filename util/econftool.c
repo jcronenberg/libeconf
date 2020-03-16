@@ -584,8 +584,7 @@ static void newProcess(const char *command, char *path, const char *filenameSuff
             }
         }
         /* check if file already exists */
-        snprintf(pathFilename, strlen(path) + strlen(filenameSuffix) + 4,
-                "%s%s%s", path, "/", filenameSuffix);
+        snprintf(pathFilename, sizeof(pathFilename), "%s%s%s", path, "/", filenameSuffix);
         if (access(pathFilename, F_OK) == 0) {
             char input[2] = "";
             /* let the user verify that the file should really be overwritten */
