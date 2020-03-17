@@ -45,7 +45,7 @@ static void diffGroups(char **, char **, char ***, char ***, char ***, size_t *,
         size_t *, size_t *, size_t *, size_t *);
 static void newProcess(const char *, char *, const char *, econf_file *);
 static void usage(void);
-static void changeRoot(char *);
+static void changeRootDir(char *);
 
 int main (int argc, char *argv[])
 {
@@ -83,7 +83,7 @@ int main (int argc, char *argv[])
         case 'f':
             /* overwrite path */
             snprintf(path, sizeof(path), "%s", "/etc");
-            changeRoot(path);
+            changeRootDir(path);
             isDropinFile = false;
             break;
         case 'h':
@@ -140,16 +140,24 @@ int main (int argc, char *argv[])
      * argc == 4 -> edit --full
      */
     if (argc == 4) {
+        if (strlen(argv[3]) > sizeof(filename)) {
+            fprintf(stderr, "Filename too long\n");
+            return EXIT_FAILURE;
+        }
         snprintf(filename, strlen(argv[3]) - strlen(posLastDot) + 1, "%s", argv[3]);
         snprintf(filenameSuffix, sizeof(filenameSuffix), argv[3]);
     } else {
+        if (strlen(argv[2]) > sizeof(filename)) {
+            fprintf(stderr, "Filename too long\n");
+            return EXIT_FAILURE;
+        }
         snprintf(filename, strlen(argv[2]) - strlen(posLastDot) + 1, "%s", argv[2]);
         snprintf(filenameSuffix, sizeof(filenameSuffix), argv[2]);
     }
 
     if (isDropinFile) {
         snprintf(path, sizeof(path), "%s%s%s", "/etc/", filenameSuffix, ".d");
-        changeRoot(path);
+        changeRootDir(path);
     }
     snprintf(pathFilename, sizeof(pathFilename), "%s%s%s", path, "/", filenameSuffix);
 
@@ -162,7 +170,7 @@ int main (int argc, char *argv[])
     if (getenv("ECONFTOOL_ROOT") == NULL)
         snprintf(home, sizeof(home), "%s", getenv("HOME"));
     else
-        changeRoot(home);
+        changeRootDir(home);
 
     char *xdgConfigDir = getenv("XDG_CONFIG_HOME");
     if (xdgConfigDir == NULL) {
@@ -174,8 +182,8 @@ int main (int argc, char *argv[])
     }
 
     /* Change Root dirs */
-    changeRoot(rootDir);
-    changeRoot(usrRootDir);
+    changeRootDir(rootDir);
+    changeRootDir(usrRootDir);
 
 
     /****************************************************************
@@ -285,7 +293,7 @@ int main (int argc, char *argv[])
             if (!isRoot) {
                 /* adjust path to home directory of the user.*/
                 snprintf(path, sizeof(path), "%s", xdgConfigDir);
-                changeRoot(path);
+                changeRootDir(path);
             } else {
                 if(isDropinFile) {
                     memset(filename, 0, PATH_MAX);
@@ -626,14 +634,14 @@ static void newProcess(const char *command, char *path, const char *filenameSuff
 /* Change root dir if enviroment variable "ECONFTOOL_ROOT" exists
  * mostly for testing purposes
  */
-void changeRoot(char *path)
+void changeRootDir(char *path)
 {
-    char *tmp = strdup(path);
-
     if (getenv("ECONFTOOL_ROOT") != NULL) {
+        char *tmp = strdup(path);
+
         strcpy(path, getenv("ECONFTOOL_ROOT"));
         strcat(path, tmp);
-    }
 
-    free(tmp);
+        free(tmp);
+    }
 }
