@@ -639,12 +639,11 @@ static void newProcess(const char *command, char *path, const char *filenameSuff
 void changeRootDir(char *path)
 {
     if (getenv("ECONFTOOL_ROOT") != NULL) {
-        char *newRoot = strdup(getenv("ECONFTOOL_ROOT"));
-
         if (strlen(path) + strlen(getenv("ECONFTOOL_ROOT")) > PATH_MAX) {
             fprintf(stderr, "ECONFTOOL_ROOT + path is too long\n");
             exit(EXIT_FAILURE);
         }
+
         char *tmp = strdup(path);
 
         strcpy(path, getenv("ECONFTOOL_ROOT"));
