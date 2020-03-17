@@ -631,8 +631,10 @@ static void newProcess(const char *command, char *path, const char *filenameSuff
     }
 }
 
-/* Change root dir if enviroment variable "ECONFTOOL_ROOT" exists
- * mostly for testing purposes
+/**
+ * @brief Change root dir if enviroment variable "ECONFTOOL_ROOT" exists
+ *
+ * @param path The path to be changed
  */
 void changeRootDir(char *path)
 {
