@@ -69,3 +69,4 @@ tests/tst-groups3
 tests/tst-groups4
 tests/tst-parseconfig1
 build
+util/econftool
