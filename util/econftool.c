@@ -21,19 +21,18 @@
 */
 
 #include <errno.h>
+#include <ftw.h>
 #include <getopt.h>
+#include <limits.h>
+#include <pwd.h>
 #include <stdio.h>
 #include <string.h>
-#include <unistd.h>
 #include <sys/wait.h>
-#include <limits.h>
-#include <ftw.h>
+#include <unistd.h>
 
 #include "libeconf.h"
 
 #define UNUSED(x) (void)(x)
-
-#include <pwd.h>
 
 static const char *utilname = "econftool";
 static econf_file *key_file = NULL;
@@ -442,6 +441,7 @@ int main (int argc, char *argv[])
 
     /* parse command line arguments. See getopt_long(3) */
     int opt, nonopts;
+
     int index = 0;
     static struct option longopts[] = {
     /*   name,     arguments,      flag, value */
