@@ -13,23 +13,22 @@ declare -a experr=("variable = 301"
 
 teststringslength=${#teststrings[@]}
 
-econftool_exe=$PWD/../util/econftool
+econftool_exe="$PWD/../util/econftool"
 if ! [[ -f "$econftool_exe" ]]; then
-    econftool_exe=$PWD/econftool
+    econftool_exe="$PWD/econftool"
     if ! [[ -f "$econftool_exe" ]]; then
         echo "Couldn't find the econftool executable"
         exit 1
     fi
 fi
-econftool_root=$PWD/../../tests/tst-econftool-data
+econftool_root="$PWD/../../tests/tst-econftool-data"
 if ! [[ -d "$econftool_root" ]]; then
-    econftool_root=$PWD/../tests/tst-econftool-data
+    econftool_root="$PWD/../tests/tst-econftool-data"
     if ! [[ -d "$econftool_root" ]]; then
         echo "Couldn't set ECONFTOOL_ROOT"
         exit 1
     fi
 fi
-echo debug: $econftool_root
 export ECONFTOOL_ROOT=$econftool_root
 
 got_error=false

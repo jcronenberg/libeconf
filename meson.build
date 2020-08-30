@@ -85,5 +85,4 @@ executable('example', example_src, dependencies : libeconf_dep)
 executable('econftool', econftool_src, dependencies : libeconf_dep)
 
 # Unit tests
-run_target('econftests', command : ['tests/tst-econftool1.sh', 'tests/tst-econftool_show1.sh'])
 subdir('tests')

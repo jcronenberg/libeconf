@@ -19,9 +19,9 @@ declare -a experr=("Usage: econftool"
 
 teststringslength=${#teststrings[@]}
 
-econftool_exe=$PWD/../util/econftool
+econftool_exe="$PWD/../util/econftool"
 if ! [[ -f "$econftool_exe" ]]; then
-    econftool_exe=$PWD/econftool
+    econftool_exe="$PWD/econftool"
     if ! [[ -f "$econftool_exe" ]]; then
         echo "Couldn't find the econftool executable"
         exit 1

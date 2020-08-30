@@ -35,12 +35,11 @@
 #define UNUSED(x) (void)(x)
 
 static const char *utilname = "econftool";
-static econf_file *key_file = NULL;
 static bool non_interactive = false;
 static char *conf_suffix = NULL; /* the suffix of the filename e.g. .conf */
 static char conf_dir[PATH_MAX] = {0}; /* the directory of the config file */
 static char conf_basename[PATH_MAX] = {0}; /* the filename without the suffix */
-static char conf_filename[PATH_MAX] = {0}; /* the filename with the suffix */
+static char conf_filename[PATH_MAX] = {0}; /* the filename including the suffix */
 static char conf_path[PATH_MAX] = {0}; /* the path concatenated with the filename and the suffix */
 static char xdg_config_dir[PATH_MAX] = {0};
 static char root_dir[PATH_MAX] = "/etc";
@@ -61,7 +60,7 @@ static void usage(void)
     fprintf(stderr, "                   creating drop-in files.\n");
     fprintf(stderr, "  -y, --yes:       assumes yes for all prompts.\n");
     fprintf(stderr, "  --use-homedir:   only has an effect if the user is root.\n");
-    fprintf(stderr, "                   chooses the root home directory instead of /etc\n");
+    fprintf(stderr, "                   chooses the root home directory instead of /etc.\n");
     fprintf(stderr, "revert   reverts all changes to the vendor versions. Basically deletes\n");
     fprintf(stderr, "         the config file and snippet directory in /etc.\n");
     fprintf(stderr, "  -y, --yes:       assumes yes for all prompts and runs non-interactively.\n\n");
@@ -123,50 +122,48 @@ static int generate_tmp_file(char *tmp_name)
  *        (econf_readDirs) and print all groups, keys and their
  *        values as an application would see them.
  */
-static int econf_show(void)
+static int econf_show(struct econf_file **key_file)
 {
     econf_err econf_error;
 
-    econf_error = econf_readDirs(&key_file, usr_root_dir, root_dir, conf_basename, conf_suffix, "=", "#");
+    econf_error = econf_readDirs(key_file, usr_root_dir, root_dir, conf_basename,
+                                 conf_suffix, "=", "#");
     if (econf_error) {
         fprintf(stderr, "%s\n", econf_errString(econf_error));
-        econf_free(key_file);
         return -1;
     }
 
+    int ret = 0;
     char **groups = NULL;
     char *value = NULL;
     size_t groupCount = 0;
 
     /* show groups, keys and their value */
-    econf_error = econf_getGroups(key_file, &groupCount, &groups);
+    econf_error = econf_getGroups(*key_file, &groupCount, &groups);
     if (econf_error) {
         fprintf(stderr, "%s\n", econf_errString(econf_error));
-        econf_free(groups);
-        econf_free(key_file);
-        return -1;
+        ret = -1;
+        goto cleanup;
     }
-    for (size_t g = 0; g < groupCount; g++)
-    {
+    for (size_t g = 0; g < groupCount; g++) {
         char **keys = NULL;
         size_t key_count = 0;
 
-        econf_error = econf_getKeys(key_file, groups[g], &key_count, &keys);
-        if (econf_error)
-        {
+        econf_error = econf_getKeys(*key_file, groups[g], &key_count, &keys);
+        if (econf_error) {
             fprintf(stderr, "%s\n", econf_errString(econf_error));
-            econf_free(groups);
             econf_free(keys);
-            return -1;
+            ret = -1;
+            goto cleanup;
         }
         printf("%s\n", groups[g]);
         for (size_t k = 0; k < key_count; k++) {
-            econf_error = econf_getStringValue(key_file, groups[g], keys[k], &value);
+            econf_error = econf_getStringValue(*key_file, groups[g], keys[k], &value);
             if (econf_error) {
                 fprintf(stderr, "%s\n", econf_errString(econf_error));
-                econf_free(groups);
                 econf_free(keys);
-                return -1;
+                ret = -1;
+                goto cleanup;
             }
             if (value != NULL)
                 printf("%s = %s\n", keys[k], value);
@@ -175,15 +172,17 @@ static int econf_show(void)
         printf("\n");
         econf_free(keys);
     }
+
+  cleanup:
     econf_free(groups);
-    return 0;
+    return ret;
 }
 
 /**
  * @brief Generates a tmpfiles from key_file and opens editor to allow user editing.
  *        It then saves the edited in key_file_edit and deletes the tmpfile
  */
-static int econf_edit_editor(struct econf_file **key_file_edit)
+static int econf_edit_editor(struct econf_file **key_file_edit, struct econf_file **key_file)
 {
     econf_err econf_error;
     int wstatus;
@@ -215,7 +214,7 @@ static int econf_edit_editor(struct econf_file **key_file_edit)
     /* child */
 
         /* write contents of key_file to tmpfile */
-        econf_error = econf_writeFile(key_file, tmp_path, tmpfile_edit);
+        econf_error = econf_writeFile(*key_file, tmp_path, tmpfile_edit);
         if (econf_error) {
             fprintf(stderr, "%s\n", econf_errString(econf_error));
             exit(EXIT_FAILURE);
@@ -229,15 +228,15 @@ static int econf_edit_editor(struct econf_file **key_file_edit)
     int ret = 0;
     do {
         if (waitpid(pid, &wstatus, 0) == -1) {
-            fprintf(stderr, "Error using waitpid().\n");
+            perror("waitpid");
             ret = -1;
             goto cleanup;
-        } else if (!(WIFEXITED(wstatus) && WEXITSTATUS(wstatus) == 0)) {
-            printf("WIFEXITED: %d, WEXITSTATUS: %d\n", WIFEXITED(wstatus), WEXITSTATUS(wstatus));
+        } else if (!WIFEXITED(wstatus)) {
+            fprintf(stderr, "Exited, status: %d\n", WEXITSTATUS(wstatus));
             ret = -1;
             goto cleanup;
         }
-    } while (!(WIFEXITED(wstatus) && WEXITSTATUS(wstatus) == 0));
+    } while (!WIFEXITED(wstatus));
 
     /* save edits from tmpfile_edit in key_file_edit */
     econf_error = econf_readFile(key_file_edit, path_tmpfile_edit, "=", "#");
@@ -246,7 +245,7 @@ static int econf_edit_editor(struct econf_file **key_file_edit)
         ret = -1;
     }
 
-    cleanup:
+  cleanup:
     remove(path_tmpfile_edit);
     return ret;
 }
@@ -266,18 +265,18 @@ static int econf_edit_editor(struct econf_file **key_file_edit)
  *  TODO:
  *      - Replace static values of the path with future libeconf API calls
  */
-static int econf_edit(void)
+static int econf_edit(struct econf_file **key_file)
 {
     econf_err econf_error;
     econf_file *key_file_edit = NULL;
 
-    econf_error = econf_readDirs(&key_file, usr_root_dir, root_dir, conf_basename, conf_suffix, "=", "#");
+    econf_error = econf_readDirs(key_file, usr_root_dir, root_dir, conf_basename, conf_suffix, "=", "#");
 
     if (econf_error == ECONF_NOFILE) {
     /* the file does not exist */
 
         /* create empty key file */
-        if ((econf_error = econf_newIniFile(&key_file))) {
+        if ((econf_error = econf_newIniFile(key_file))) {
             fprintf(stderr, "%s\n", econf_errString(econf_error));
             return -1;
         }
@@ -287,7 +286,7 @@ static int econf_edit(void)
         return -1;
     }
 
-    if (econf_edit_editor(&key_file_edit)) {
+    if (econf_edit_editor(&key_file_edit, key_file)) {
         econf_free(key_file_edit);
         return -1;
     }
@@ -303,7 +302,7 @@ static int econf_edit(void)
     size_t groupEditCount = 0;
 
     /* extract the groups of the original key_file into groups */
-    econf_error = econf_getGroups(key_file, &groupCount, &groups);
+    econf_error = econf_getGroups(*key_file, &groupCount, &groups);
     if (econf_error) {
         fprintf(stderr, "%s\n", econf_errString(econf_error));
         ret = -1;
@@ -353,7 +352,7 @@ static int econf_edit(void)
     }
 
     /* cleanup */
-    cleanup:
+  cleanup:
     econf_free(key_file_edit);
     econf_free(groupsEdit);
     econf_free(groups);
@@ -434,6 +433,7 @@ static int econf_revert(bool is_root, bool use_homedir)
 int main (int argc, char *argv[])
 {
     static const char *dropin_filename = "90_econftool.conf";
+    static econf_file *key_file = NULL;
     char home_dir[PATH_MAX] = {0}; /* the path of the home directory */
     bool is_dropin_file = true;
     bool is_root = false;
@@ -541,7 +541,7 @@ int main (int argc, char *argv[])
     int ret = 0;
 
     if (strcmp(argv[optind], "show") == 0) {
-        ret = econf_show();
+        ret = econf_show(&key_file);
     } else if (strcmp(argv[optind], "edit") == 0) {
         if (!is_root || use_homedir) {
             /* adjust path to home directory of the user.*/
@@ -553,7 +553,7 @@ int main (int argc, char *argv[])
                     conf_filename);
         }
 
-        ret = econf_edit();
+        ret = econf_edit(&key_file);
     } else if (strcmp(argv[optind], "revert") == 0) {
         ret = econf_revert(is_root, use_homedir);
     } else {
